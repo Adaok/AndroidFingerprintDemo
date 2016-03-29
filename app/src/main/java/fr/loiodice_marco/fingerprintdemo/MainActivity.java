@@ -1,22 +1,43 @@
 package fr.loiodice_marco.fingerprintdemo;
 
-import android.app.KeyguardManager;
-import android.os.Bundle;
-import android.support.v4.hardware.fingerprint.FingerprintManagerCompatApi23;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.app.KeyguardManager;
+import android.widget.Toast;
+
 
 public class MainActivity extends AppCompatActivity {
-
-    private FingerprintManagerCompatApi23 fingerprintManagerCompatApi23;
+    
+    private FingerprintManagerCompat fingerprintManagerCompat;
     private KeyguardManager keyguardManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+        
+        fingerprintManagerCompat = FingerprintManagerCompat.from(getApplicationContext());
+        
+        if(!keyguardManager.isKeyguardSecure()){
+            Toast.makeText(this, "Lock screen security not configure in Settings", Toast.LENGTH_LONG).show();
+            return;
+        }
+        
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(this, "Fingerprint authentification permission not enabled", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-        fingerprintManagerCompatApi23 = (FingerprintManagerCompatApi23) getSystemService(FINGERPRINT_SERVICE);
+        if (!fingerprintManagerCompat.hasEnrolledFingerprints()){
+            Toast.makeText(this, "Register at least one fingerprint in Settings", Toast.LENGTH_LONG).show();
+            return;
+        }
+        
+        
     }
 }
