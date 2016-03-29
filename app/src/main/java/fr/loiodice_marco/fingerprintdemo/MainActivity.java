@@ -8,7 +8,6 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
-import android.support.v4.hardware.fingerprint.FingerprintManagerCompatApi23;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.KeyguardManager;
@@ -68,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (cipherInit()) {
             cryptoObject = new FingerprintManagerCompat.CryptoObject(cipher);
+            FingerPrintHandler helper = new FingerPrintHandler(this);
+            helper.startAuth(fingerprintManagerCompat, cryptoObject);
         }
 
     }
