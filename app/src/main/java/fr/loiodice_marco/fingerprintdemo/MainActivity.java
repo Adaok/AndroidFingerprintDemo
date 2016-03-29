@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
@@ -14,12 +15,18 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private KeyguardManager keyguardManager;
     private KeyStore keyStore;
     private KeyGenerator keyGenerator;
+    private Cipher cipher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +89,30 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | CertificateException | IOException e){
             throw new RuntimeException(e);
+        }
+    }
+
+    public boolean cipherInit(){
+        try {
+            cipher = Cipher.getInstance(
+                    KeyProperties.KEY_ALGORITHM_AES + "/"
+                    + KeyProperties.BLOCK_MODE_CBC + "/"
+                    + KeyProperties.ENCRYPTION_PADDING_PKCS7);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            throw new RuntimeException("Failed to get Cipher");
+        }
+
+        try {
+            keyStore.load(null);
+            SecretKey key = (SecretKey) keyStore.getKey(KEY_NAME, null);
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return true;
+
+        } catch (KeyPermanentlyInvalidatedException e) {
+            return false;
+        } catch (KeyStoreException | CertificateException | UnrecoverableEntryException
+                | IOException | NoSuchAlgorithmException | InvalidKeyException e){
+            throw new RuntimeException("Failed to init Cipher", e);
         }
     }
 }
